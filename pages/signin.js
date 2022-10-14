@@ -1,19 +1,17 @@
+import { InjectedConnector } from 'wagmi/connectors/injected';
 import { signIn } from 'next-auth/react';
 import { useAccount, useConnect, useSignMessage, useDisconnect } from 'wagmi';
 import { useRouter } from 'next/router';
-import { InjectedConnector } from 'wagmi/connectors/injected';
 import axios from 'axios';
-import styles from "../styles/Home.module.css";
 
 function SignIn() {
     const { connectAsync } = useConnect();
     const { disconnectAsync } = useDisconnect();
     const { isConnected } = useAccount();
     const { signMessageAsync } = useSignMessage();
-    const { push } = useRouter();    
+    const { push } = useRouter();
 
     const handleAuth = async () => {
-
         if (isConnected) {
             await disconnectAsync();
         }
@@ -32,37 +30,19 @@ function SignIn() {
 
         const signature = await signMessageAsync({ message });
 
+        // redirect user after success authentication to '/user' page
         const { url } = await signIn('credentials', { message, signature, redirect: false, callbackUrl: '/user' });
-
+        /**
+         * instead of using signIn(..., redirect: "/user")
+         * we get the url from callback and push it to the router to avoid page refreshing
+         */
         push(url);
     };
 
     return (
- 
-
         <div>
-         <h1 className={styles.h1}>Auth - NFT Gated Content</h1>
-      <p className={styles.explain}> Serve exclusive content to users who own an NFT from your collection,
-        using{" "}</p>
-        <b>
-          <a
-            href="https://portal.thirdweb.com/building-web3-apps/authenticating-users"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.purple}
-          >
-            Auth
-          </a>
-        </b>
-        <p className={styles.explain}>
-        You cannot access the main page unless you own an NFT from our
-        collection!
-      </p>
-      <hr className={styles.divider} />
-
-
-        <button  className={styles.mainButton} style={{ width: 256 }} onClick={() => handleAuth()}>Authenticate via Metamask</button>
-
+            <h3>Web3 Authentication</h3>
+            <button onClick={() => handleAuth()}>Authenticate via Metamask</button>
         </div>
     );
 }

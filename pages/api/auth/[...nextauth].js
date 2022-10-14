@@ -18,35 +18,32 @@ export default NextAuth({
                     placeholder: '0x0',
                 },
             },
-              async authorize(credentials) {
+            async authorize(credentials) {
                 try {
-                  // "message" and "signature" are needed for authorisation
-                  // we described them in "credentials" above
-                  const { message, signature } = credentials;
+                    const { message, signature } = credentials;
 
-                  await Moralis.start({ apiKey: process.env.MORALIS_API_KEY });
+                    await Moralis.start({ apiKey: process.env.MORALIS_API_KEY });
 
-                  const { address, profileId } = (
-                    await Moralis.Auth.verify({ message, signature, network: 'evm' })
-                  ).raw;
+                    const { address, profileId, expirationTime } = (await Moralis.Auth.verify({ message, signature, network: 'evm' })).raw;
 
-                  const user = { address, profileId, signature };
-                  // returning the user object and creating  a session
-                  return user;
+                    const user = { address, profileId, expirationTime, signature };
+
+                    return user;
                 } catch (e) {
-                  console.error(e);
-                  return null;
+                    // eslint-disable-next-line no-console
+                    console.error(e);
+                    return null;
                 }
-              },
+            },
         }),
     ],
-    // adding user info to the user session object
     callbacks: {
         async jwt({ token, user }) {
             user && (token.user = user);
             return token;
         },
         async session({ session, token }) {
+            session.expires = token.user.expirationTime;
             session.user = token.user;
             return session;
         },
